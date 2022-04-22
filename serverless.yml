@@ -1,0 +1,285 @@
+service: aws-kreo-http
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: us-east-2
+  httpApi:
+    cors: true
+
+functions:
+  # Base api url
+  api:
+    handler: functions.handler.api
+    events:
+      - httpApi:
+          path: /api/v1
+          method: get
+  # Twilio integration
+  send_phone_code:
+    handler: functions.twilio_service.send_code.send_phone_code
+    events:
+      - httpApi:
+          path: /api/v1/phone-code
+          method: post
+  verify_phone_code:
+    handler: functions.twilio_service.send_code.verify_phone_code
+    events:
+      - httpApi:
+          path: /api/v1/phone-code/verify
+          method: post
+  send_email_code:
+    handler: functions.twilio_service.send_email_code.send_email_code
+    events:
+      - httpApi:
+          path: /api/v1/email-code
+          method: post
+  verify_email_code:
+    handler: functions.twilio_service.send_email_code.verify_email_code
+    events:
+      - httpApi:
+          path: /api/v1/email-code/verify
+          method: post
+  # User management
+  register_user:
+    handler: functions.auth.register.register
+    events:
+      - httpApi:
+          path: /api/v1/auth/register
+          method: post
+  login_user:
+    handler: functions.auth.login.login
+    events:
+      - httpApi:
+          path: /api/v1/auth/login
+          method: post
+  change_password:
+    handler: functions.auth.change_password.change_password
+    events:
+      - httpApi:
+          path: /api/v1/auth/change-password
+          method: post
+  # Holidays management
+  register_holidays:
+    handler: functions.calendar.holidays.register_holidays
+    events:
+      - httpApi:
+          path: /api/v1/calendar/holidays
+          method: post
+  get_holidays:
+    handler: functions.calendar.holidays.get_holidays
+    events:
+      - httpApi:
+          path: /api/v1/calendar/holidays
+          method: get
+  update_holiday:
+    handler: functions.calendar.holidays.update_holiday
+    events:
+      - httpApi:
+          path: /api/v1/calendar/holidays/{holiday_id}
+          method: put
+  # Company CRUD
+  create_company:
+    handler: functions.company.create.create
+    events:
+      - httpApi:
+          path: /api/v1/companies
+          method: post
+      # - s3:
+      #     bucket: grupo-kreo-images
+      #     event: s3:ObjectCreated:*
+      #     rules:
+      #       - prefix: uploads/
+      #       - suffix: .jpg
+      #     existing: true  
+  get_one_company:
+    handler: functions.company.get_one.get_one
+    events:
+      - httpApi:
+          path: /api/v1/companies/{company_id}
+          method: get
+  get_tasks_by_company:
+    handler: functions.company.get_tasks.get_tasks_by_company_id
+    events:
+      - httpApi:
+          path: /api/v1/companies/{company_id}/tasks
+          method: get
+  get_all_companies:
+    handler: functions.company.get_all.get_all
+    events:
+      - httpApi:
+          path: /api/v1/companies
+          method: get
+  update_company:
+    handler: functions.company.update.update
+    events:
+      - httpApi:
+          path: /api/v1/companies/{company_id}
+          method: put
+  delete_company:
+    handler: functions.company.delete.delete
+    events:
+      - httpApi:
+          path: /api/v1/companies/{company_id}
+          method: delete
+  # Staff CRUD
+  create_staff:
+    handler: functions.staff.create.create
+    events:
+      - httpApi:
+          path: /api/v1/staff
+          method: post
+  get_one_staff:
+    handler: functions.staff.get_one.get_one
+    events:
+      - httpApi:
+          path: /api/v1/staff/{staff_id}
+          method: get
+  get_all_staff:
+    handler: functions.staff.get_all.get_all
+    events:
+      - httpApi:
+          path: /api/v1/staff
+          method: get
+  update_staff:
+    handler: functions.staff.update.update
+    events:
+      - httpApi:
+          path: /api/v1/staff/{staff_id}
+          method: put
+  delete_staff:
+    handler: functions.staff.delete.delete
+    events:
+      - httpApi:
+          path: /api/v1/staff/{staff_id}
+          method: delete
+  # Tasks CRUD
+  create_task:
+    handler: functions.tasks.create.create
+    events:
+      - httpApi:
+          path: /api/v1/tasks
+          method: post
+  create_basic_task:
+    handler: functions.tasks.create_basic_task.create_basic_task
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic
+          method: post
+  get_one_task:
+    handler: functions.tasks.get_one.get_one
+    events:
+      - httpApi:
+          path: /api/v1/tasks/{task_id}
+          method: get
+  get_all_tasks:
+    handler: functions.tasks.get_all.get_all
+    events:
+      - httpApi:
+          path: /api/v1/tasks
+          method: get
+  get_all_basic_tasks:
+    handler: functions.tasks.get_all_basic_tasks.get_all_basic_tasks
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic
+          method: get
+  update_one_task:
+    handler: functions.tasks.update.update
+    events:
+      - httpApi:
+          path: /api/v1/tasks/{task_id}
+          method: put
+  update_basic_task:
+    handler: functions.tasks.update_basic_task.update_basic_task
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic/{task_id}
+          method: put
+  delete_task:
+    handler: functions.tasks.delete.delete
+    events:
+      - httpApi:
+          path: /api/v1/tasks/{task_id}
+          method: delete
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: usersTable
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    holidaysTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: holidaysTable
+        AttributeDefinitions:
+          - AttributeName: holiday_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: holiday_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    companiesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: companiesTable
+        AttributeDefinitions:
+          - AttributeName: company_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: company_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    staffTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: staffTable
+        AttributeDefinitions:
+          - AttributeName: staff_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: staff_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    tasksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tasksTable
+        AttributeDefinitions:
+          - AttributeName: task_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: task_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    # MyS3Bucket:
+    #   Type: AWS::S3::Bucket
+    #   Properties:
+    #     BucketName: grupo-kreo-images
+    #     AccessControl: PublicRead
+
+plugins:
+  - serverless-offline
+  - serverless-python-requirements
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux

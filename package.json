@@ -1,0 +1,11 @@
+{
+  "name": "aws-kreo-http",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "serverless-offline": "^8.5.0",
+    "serverless-python-requirements": "^5.4.0"
+  }
+}
