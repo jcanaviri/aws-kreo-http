@@ -2,8 +2,7 @@ import json
 
 from pynamodb.exceptions import DoesNotExist, GetError
 
-from ..lib.headers import headers
-from ..lib.response import no_data
+from ..lib.response import response_no_data, response_with_data
 
 from ..models.staff_model import StaffModel
 from ..models.company_model import CompanyModel
@@ -15,22 +14,23 @@ def get_one(event, context):
     try:
         staff_id = event['pathParameters']['staff_id']
     except:
-        return no_data('COULD_NOT_GET_STAFF_ID')
+        return response_no_data(status_code=400, message='Could not get staff_id')
 
     for staff in StaffModel.query(hash_key=staff_id):
         try:
             found_company = CompanyModel.get(hash_key=staff.company_id)
         except DoesNotExist:
-            return no_data('STAFF_NOT_FOUND')
+            return response_no_data(status_code=404, message='Company not found')
         except GetError:
-            return no_data('COULD_NOT_GET_STAFF')
+            return response_no_data(status_code=500, message='Could not get company')
 
         try:
             found_user = UserModel.get(hash_key=staff.user_id)
         except DoesNotExist:
-            return no_data('STAFF_NOT_FOUND')
+            return response_no_data(status_code=404, message='User not found')
         except GetError:
-            return no_data('COULD_NOT_GET_STAFF')
+            return response_no_data(status_code=500, message='Could not get user')
+
 
         body = {
             "data": {
@@ -56,7 +56,6 @@ def get_one(event, context):
             },
         }
 
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status_code=200, data=body)
 
-    return no_data('STAFF_NOT_FOUND')
+    return response_no_data(status_code=404, message='Staff not found')

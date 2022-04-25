@@ -2,8 +2,7 @@ import json
 
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
-from ..lib.headers import headers
-from ..lib.response import no_data
+from ..lib.response import response_no_data, response_no_content
 
 from ..models.task_model import TaskModel
 
@@ -12,21 +11,16 @@ def delete(event, context):
     try:
         task_id = event['pathParameters']['task_id']
     except:
-        return no_data('COULD_NOT_GET_TASK_ID')
+        return response_no_data(status_code=400, message='Could not get task_id')
 
     try:
         found_task = TaskModel.get(hash_key=task_id)
     except DoesNotExist:
-        return no_data('TASK_NOT_FOUND')
+        return response_no_data(status_code=404, message='Task not found')
 
     try:
         found_task.delete()
     except DeleteError:
-        return no_data('COULD_NOT_DELETE_TASK')
+        return response_no_data(status_code=500, message='Could not delete task')
 
-    body = {
-        "data": None,
-        "message": "TASK_DELETED"
-    }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_no_content(status_code=204)

@@ -2,7 +2,7 @@ import json
 
 from ..models.task_model import TaskModel
 
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
 
 def get_all(event, context):
@@ -23,5 +23,4 @@ def get_all(event, context):
     body = {
         "data": tasks_list
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=200, data=body)

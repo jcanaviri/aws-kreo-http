@@ -1,6 +1,6 @@
 import json
 
-from ..lib.headers import headers
+from ..lib.response import response_with_data
 from ..models.company_model import CompanyModel
 
 
@@ -18,5 +18,4 @@ def get_all(event, context):
     body = {
         "data": company_list
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=200, data=body)

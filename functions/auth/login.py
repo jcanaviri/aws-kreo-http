@@ -3,8 +3,7 @@ import json
 from werkzeug.security import check_password_hash
 
 from ..lib.auth_token import get_token
-from ..lib.headers import headers
-from ..lib.response import no_data
+from ..lib.response import response_no_data, response_with_data
 
 from ..models.user_model import UserModel
 from ..models.staff_model import StaffModel
@@ -25,7 +24,7 @@ def login(event, context):
     
     if email is None or password is None \
         or type(email) != str or type(password) != str:
-        return no_data('BAD_REQUEST')
+        return response_no_data(status_code=400, message='Email or password cannot be blank')
 
     # Validate if the user exists
     for user in UserModel.scan(UserModel.email == email):
@@ -65,14 +64,9 @@ def login(event, context):
                             "user_id": staff.user_id
                         }
                     }
-                    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-                    return response
+                    return response_with_data(status_code=200, data=body)
             else:
-                body = {
-                    "data": None,
-                    "message": f"USER_BLOCKED"
-                }
-                return {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
+                return response_no_data(status_code=403, message='User is blocked')
         else:
             # Incorrect password set counter += 1
             if user.intent_counter < 3:
@@ -83,15 +77,11 @@ def login(event, context):
                     "intents": user.intent_counter,
                     "message": f"PASSWORD_INCORRECT_INTENT_{user.intent_counter}"
                 }
-                return {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
+                return response_with_data(status_code=401, data=body)
 
             # If the counter is greater than 3 block the user
             user.is_active = False
             user.save()
-            body = {
-                "data": None,
-                "message": "USER_BLOCKED"
-            }
-            return {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
+            return response_no_data(status_code=403, message='User is blocked')
 
-    return no_data('USER_NOT_FOUND')
+    return response_no_data(status_code=404, message='User not found')

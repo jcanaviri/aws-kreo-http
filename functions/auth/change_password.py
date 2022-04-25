@@ -3,8 +3,7 @@ import json
 from werkzeug.security import generate_password_hash
 from pynamodb.exceptions import GetError, DoesNotExist
 
-from ..lib.response import no_data
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
 from ..models.user_model import UserModel
 from ..models.staff_model import StaffModel
@@ -25,7 +24,7 @@ def change_password(event, context):
     # Validate if the request body is not in the right format
     if email is None or new_password is None \
         or type(email) != str or type(new_password) != str:
-        return no_data('BAD_REQUEST')
+        return response_no_data(status_code=400, message="Email or password cannot be blank")
 
     for user in UserModel.scan(UserModel.email == email):
         # When the password is restored 
@@ -47,9 +46,10 @@ def change_password(event, context):
             try:
                 found_company = CompanyModel.get(hash_key=found_staff.company_id)
             except GetError:
-                return no_data('COMPANY_NOT_FOUND')
+                return response_no_data(status_code=404, message="Company not found")
             except DoesNotExist:
-                return no_data('COMPANY_DOEST_EXISTS')
+                return response_no_data(status_code=404, message="Company not found")
+                
 
             body = {
                 "data": {
@@ -75,7 +75,6 @@ def change_password(event, context):
                     "company_id": found_company.company_id
                 }
             }
-            response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}                
-            return response
+            return response_with_data(status_code=200, data=body)
 
-    return no_data('USER_NOT_FOUND')
+    return response_no_data(status_code=404, message='User not found')

@@ -2,8 +2,7 @@ import json
 
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
-from ..lib.headers import headers
-from ..lib.response import no_data
+from ..lib.response import response_no_data, response_no_content
 
 from ..models.staff_model import StaffModel
 from ..models.user_model import UserModel
@@ -13,12 +12,12 @@ def delete(event, context):
     try:
         staff_id = event['pathParameters']['staff_id']
     except:
-        return no_data('COULD_NOT_GET_STAFF_ID')
+        return response_no_data(status_code=400, message='Could not get staff_id')
 
     try:
         found_staff = StaffModel.get(hash_key=staff_id)
     except DoesNotExist:
-        return no_data('STAFF_NOT_FOUND')
+        return response_no_data(status_code=404, message='Staff not found')
 
     try:
         found_user = UserModel.get(hash_key=found_staff.user_id)
@@ -26,11 +25,6 @@ def delete(event, context):
         found_staff.delete()
         found_user.delete()
     except DeleteError:
-        return no_data('COULD_NOT_DELETE')
+        return response_no_data(status_code=500, message='Could not delete staff')
 
-    body = {
-        "data": None,
-        "message": "STAFF_DELETED"
-    }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_no_content(status_code=204)

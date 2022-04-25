@@ -2,8 +2,7 @@ import json
 
 from pynamodb.exceptions import DoesNotExist, GetError
 
-from ..lib.headers import headers
-from ..lib.response import no_data
+from ..lib.response import response_no_data, response_with_data
 
 from ..models.staff_model import StaffModel
 from ..models.company_model import CompanyModel
@@ -14,7 +13,7 @@ def update(event, context):
     try:
         staff_id = event['pathParameters']['staff_id']
     except:
-        return no_data('COULD_NOT_GET_STAFF_ID')
+        return response_no_data(status_code=400, message="Could not get staff_id")
     
     try:
         body = json.loads(event['body'])
@@ -44,7 +43,7 @@ def update(event, context):
     if first_name is None or last_name is None or address is None or phone is None or \
         document_number is None or document_type is None or boss is None or job is None or \
             image is None:
-        return no_data('BAD_REQUEST')
+        return response_no_data(status_code=400, message='The body fields are not valid')
 
     try:
         found_staff = StaffModel.get(hash_key=staff_id)
@@ -89,9 +88,8 @@ def update(event, context):
             },
         }
 
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status_code=200, data=body)
     except DoesNotExist:
-        return no_data('STAFF_NOT_FOUND')
+        return response_no_data(stastus_code=404, message="Staff not found")
     except GetError:
-        return no_data('COULD_NOT_GET_STAFF')
+        return response_no_data(stastus_code=500, message="Could not find staff")

@@ -5,7 +5,7 @@ from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from dotenv import load_dotenv
 
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
 
 def send_phone_code(event, context):
@@ -37,8 +37,7 @@ def send_phone_code(event, context):
             "data": None,
             "message": "BAD_REQUEST"
         }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status=400, message='The body fields are invalid')
 
     try:
         res = client \
@@ -63,17 +62,10 @@ def send_phone_code(event, context):
                 "date_updated": str(res.date_updated)
             }
         }
-
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status_code=200, data=body)
 
     except TwilioRestException:
-        body = {
-            "data": None,
-            "message": "CAN'T_SEND_CODE"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=500, message="Twilio cannot send the code")
 
 
 def verify_phone_code(event, context):
@@ -102,22 +94,11 @@ def verify_phone_code(event, context):
     
     if country_code is None or phone_number is None or code is None\
         or type(country_code) != str or type(phone_number) != str or type(code) != str:
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status=400, message='The body fields are invalid')
     
     
     if not isinstance(code, str):
-        response = {
-            "statusCode": 400,
-            "headers": headers,
-            "body": None,
-            "message": "INVALID_CODE"
-        }
-        return response
+        return response_no_data(status=400, message='The code is invalid')
 
     try:
         phone_number = f'+{country_code}{phone}'
@@ -144,12 +125,6 @@ def verify_phone_code(event, context):
             }
         }
 
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status=200, data=body)
     except TwilioRestException:
-        body = {
-            "data": None,
-            "message": "CAN'T_VERIFY_CODE"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=500, message="Twilio cannot verify the code")

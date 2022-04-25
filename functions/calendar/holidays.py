@@ -3,7 +3,7 @@ import json
 from uuid import uuid1
 from pynamodb.exceptions import DoesNotExist
 
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 from ..models.holiday_model import HolidayModel
 
 
@@ -25,12 +25,7 @@ def register_holidays(event, context):
     if year is None or country is None or company is None or event_list is None \
         or type(year) != int or type(country) != str or \
             type(company) != str or type(event_list) != list:
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=400, message='The fields are invalid')
 
     new_holiday = HolidayModel(
         holiday_id = str(uuid1()),
@@ -50,8 +45,7 @@ def register_holidays(event, context):
             "event_list": new_holiday.event_list
         },
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=201, data=body)
 
 
 def get_holidays(event, context):
@@ -59,7 +53,7 @@ def get_holidays(event, context):
     try:
         year = event['queryStringParameters']['year']
     except:
-        year = 0
+        return response_no_data(status_code=400, message="You must provide a year")
 
     holidays_list = []
     for holiday in HolidayModel.scan(HolidayModel.year == int(year)):
@@ -75,8 +69,7 @@ def get_holidays(event, context):
     body = {
         "data": holidays_list
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=200, data=body)
 
 
 def update_holiday(event, context):
@@ -85,13 +78,8 @@ def update_holiday(event, context):
     try: 
         holiday_id = event['pathParameters']['holiday_id']
     except:
-        body = {
-            "data": None,
-            "message": "COULD_NOT_UPDATE_HOLIDAY"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
-
+        return response_no_data(status_code=400, message='Could not get holiday_id')
+        
     # get the body
     try:
         body = json.loads(event['body'])
@@ -109,19 +97,12 @@ def update_holiday(event, context):
     if holiday_id is None or year is None or country is None or company is None or event_list is None \
         or type(year) != int or type(country) != str or \
             type(company) != str or type(event_list) != list:
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=400, message='The fields are not valid')
 
     try:
         found_holiday = HolidayModel.get(hash_key=holiday_id)
     except DoesNotExist:
-        return {'statusCode': 404,
-                'headers': headers,
-                'body': json.dumps({'error_message': 'HOLIDAY was not found'})}
+        return response_no_data(status_code=404, data='Holiday not found')
 
     # Update the holiday
     found_holiday.year = year
@@ -141,5 +122,4 @@ def update_holiday(event, context):
         },
     }
 
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=200, data=body)

@@ -1,45 +1,32 @@
 import json
+from re import S
 
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_no_content
 from ..models.company_model import CompanyModel
+from ..models.task_model import TaskModel
 
 
 def delete(event, context):
     try:
         company_id = event['pathParameters']['company_id']
     except:
-        body = {
-            "data": None,
-            "message": "COULD_NOT_DELETE_COMPANY"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=400, message='Could not get company_id')
 
     try:
         found_company = CompanyModel.get(hash_key=company_id)
     except DoesNotExist:
-        body = {
-            "data": None,
-            "message": "COMPANY_NOT_FOUND"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=404, message='Company not found')
 
     try:
+        # Delete the company and delete its tasks
         found_company.delete()
-    except DeleteError:
-        body = {
-            "data": None,
-            "message": "UNABLE_TO_DELETE"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
 
-    body = {
-        "data": None,
-        "message": "COMPANY_DELETED"
-    }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+        for task in TaskModel.scan(TaskModel.company_id == found_company.company_id):
+            task.delete()
+
+    except DeleteError:
+        return response_no_data(status_code=500, message='Could not delete company')
+
+    return response_no_content(status_code=204)

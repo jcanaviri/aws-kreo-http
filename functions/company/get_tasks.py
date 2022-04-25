@@ -1,7 +1,7 @@
 import json
 
-from ..lib.response import no_data
-from ..lib.headers import headers
+from ..lib.response import response_with_data, response_no_data
+
 from ..models.task_model import TaskModel
 
 
@@ -9,7 +9,7 @@ def get_tasks_by_company_id(event, context):
     try:
         company_id = event['pathParameters']['company_id']
     except:
-        return no_data('COULD_NOT_GET_COMPANY')
+        return response_no_data(status_code=400, message='Could not get company_id')
 
     # Get the basic tasks
     task_list = []
@@ -26,5 +26,4 @@ def get_tasks_by_company_id(event, context):
     body = {
         "data": task_list
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=200, data=body)

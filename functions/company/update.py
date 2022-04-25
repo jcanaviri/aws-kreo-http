@@ -1,6 +1,6 @@
 import json
 
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 from ..models.company_model import CompanyModel
 
 
@@ -9,12 +9,7 @@ def update(event, context):
     try:
         company_id = event['pathParameters']['company_id']
     except:
-        body = {
-            "data": None,
-            "message": "COULD_NOT_UPDATE_COMPANY"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=400, message='Could not get company_id')
 
     try:
         body = json.loads(event["body"])
@@ -30,11 +25,7 @@ def update(event, context):
     if name is None or nit is None or image is None or \
         type(name) != str or type(nit) != int or type(image) != str or \
         name == '' or image == '':
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = { "statusCode": 200, "headers": headers, "body": json.dumps(body)}
+        return response_no_data(status_code=400, message='The fields are invalid')
 
     for company in CompanyModel.query(hash_key=company_id):
         company.name = name
@@ -51,12 +42,6 @@ def update(event, context):
             },
         }
 
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status_code=200, data=body)
 
-    body = {
-        "data": None,
-        "message": "COMPANY_NOT_FOUND"
-    }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_no_data(status_code=404, message='Company not found')

@@ -3,8 +3,7 @@ import json
 from uuid import uuid1
 
 from ..models.task_basic_model import TaskBasicModel
-from ..lib.response import no_data
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
 
 def create(event, context):
@@ -18,7 +17,7 @@ def create(event, context):
         description = event['description'] if 'description' in event else None
         
     if title is None or description is None:
-        return no_data('BAD_REQUEST')
+        return response_no_data(status_code=400, message='The body fields are invalid')
 
     new_task = TaskBasicModel(
         task_basic_id=str(uuid1()),
@@ -33,5 +32,4 @@ def create(event, context):
         "title": new_task.title,
         "description": new_task.description,
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=201, data=body)

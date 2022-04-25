@@ -5,7 +5,8 @@ from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from dotenv import load_dotenv
 
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
+from ..models.user_model import UserModel
 
 
 def send_email_code(event, context):
@@ -29,48 +30,38 @@ def send_email_code(event, context):
         email = event['email'] if 'email' in event else None
     
     if email is None or type(email) != str:
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
-
-    try:
-        res = client \
-            .verify.services(service_id) \
-            .verifications.create(
-                to=email, 
-                channel="email"
-            )
-        body = {
-            "data": {
-                "sid": res.sid,
-                "service_sid": res.service_sid,
-                "account_sid": res.account_sid,
-                "to": res.to,
-                "channel": res.channel,
-                "status": res.status,
-                "valid": res.valid,
-                "amount": res.amount,
-                "payee": res.payee,
-                "date_created": str(res.date_created),
-                "date_updated": str(res.date_updated)
+        return response_no_data(status=400, message='The body fields are invalid')
+    
+    for _ in UserModel.scan(UserModel.email == email):
+        try:
+            res = client \
+                .verify.services(service_id) \
+                .verifications.create(
+                    to=email, 
+                    channel="email"
+                )
+            body = {
+                "data": {
+                    "sid": res.sid,
+                    "service_sid": res.service_sid,
+                    "account_sid": res.account_sid,
+                    "to": res.to,
+                    "channel": res.channel,
+                    "status": res.status,
+                    "valid": res.valid,
+                    "amount": res.amount,
+                    "payee": res.payee,
+                    "date_created": str(res.date_created),
+                    "date_updated": str(res.date_updated)
+                }
             }
-        }
 
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-
-        return response
-    except TwilioRestException:
-        body = {
-            "data": None,
-            "message": "CAN'T_SEND_CODE"
-        }
-
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
-
+            return response_with_data(status=200, data=body)
+        except TwilioRestException:
+            return response_no_data(status_code=500, message="Twilio cannot send the code")
+    
+    return response_no_data(status_code=404, message="Email not found")
+    
 
 def verify_email_code(event, context):
     # Using twilio client
@@ -95,22 +86,11 @@ def verify_email_code(event, context):
 
     if email is None or code is None \
         or type(email) != str or type(code) != str:
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status=400, message='The body fields are invalid')
 
 
     if not isinstance(code, str):
-        response = {
-            "statusCode": 400,
-            "headers": headers,
-            "body": None,
-            "message": "INVALID_CODE"
-        }
-        return response
+        return response_no_data(status=400, message='The body fields are invalid')
 
     try:
         res = client \
@@ -135,12 +115,6 @@ def verify_email_code(event, context):
             }
         }
 
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status_code=200, data=body)
     except TwilioRestException:
-        body = {
-            "data": None,
-            "message": "CAN'T_VERIFY_CODE"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_no_data(status_code=500, message="Twilio cannot verify the code")

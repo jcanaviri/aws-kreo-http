@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 from ..models.staff_model import StaffModel
 from ..models.company_model import CompanyModel
 from ..models.user_model import UserModel
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
 
 def create(event, context):
@@ -42,22 +42,12 @@ def create(event, context):
     if first_name is None or last_name is None or email is None or password is None or\
         address is None or phone is None or document_number is None or\
         document_type is None or boss is None or job is None or image is None or company is None :
-        body = {
-            "data": None,
-            "message": "BAD_REQUEST"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
-
+        return response_no_data(status_code=400, message='The fiels are not valid')
+        
     # If the email is already registered
     for _ in UserModel.scan(UserModel.email == email):
-        body = {
-            "data": None,
-            "message": "EMAIL_ALREADY_IN_USE"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
-
+        return response_no_data(status_code=403, message='Email is already registered')
+        
     # Cannot create a new staff if the company doen't exists
     for find_company in CompanyModel.scan(CompanyModel.name == company.lower()):
         # Create a new user instance
@@ -107,12 +97,6 @@ def create(event, context):
             "company_id": new_staff.company_id,
             "company_name": find_company.name,
         }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
+        return response_with_data(status_code=201, data=body)
 
-    body = {
-        "data": None,
-        "message": "COMPANY_NOT_FOUND"
-    }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_no_data(status_code=400, message='Company not found')

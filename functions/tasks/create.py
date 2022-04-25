@@ -7,8 +7,7 @@ from pynamodb.exceptions import DoesNotExist
 from ..models.task_model import TaskModel
 from ..models.company_model import CompanyModel
 
-from ..lib.response import no_data
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
 
 def create(event, context):
@@ -26,7 +25,7 @@ def create(event, context):
         company_id = event['company_id'] if 'company_id' in event else None
         
     if title is None or description is None or company_id is None:
-        return no_data('BAD_REQUEST')
+        return response_no_data(status_code=400, message='The body fields are invalid')
     if not status:
         status = False
 
@@ -34,9 +33,9 @@ def create(event, context):
     try:
         found_company = CompanyModel.get(hash_key=company_id)
     except DoesNotExist:
-        return no_data('COMPANY_NOT_FOUND')
+        return response_no_data(status_code=404, message='Company not found')
     except: 
-        return no_data('COULD_NOT_FIND_COMPANY')
+        return response_no_data(status_code=500, message='Could not get company')
 
     new_task = TaskModel(
         task_id=str(uuid1()),
@@ -55,5 +54,4 @@ def create(event, context):
         "status": new_task.status,
         "company_id": new_task.company_id
     }
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-    return response
+    return response_with_data(status_code=201, data=body)

@@ -4,9 +4,9 @@ from uuid import uuid1
 from werkzeug.security import generate_password_hash
 
 from ..models.user_model import UserModel
-from ..lib.headers import headers
+from ..lib.response import response_no_data, response_with_data
 
-
+# TODO: This funciton doesn't work 😊
 def register(event, context):
     # This is because in AWS event doesn't have a body
     try:
@@ -28,22 +28,12 @@ def register(event, context):
     if type(email) != str or type(password) != str \
         or type(first_name) != str or type(last_name) != str \
         or type(is_active) != bool:
-            body = {
-                "data": None,
-                "message": "BAD_REQUEST"
-            }
-            response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-            return response
-
+            return response_no_data(status_code=400, message='The fiels in body are not valid')
+            
     # Validate if the user exists
     for _ in UserModel.query(email):
-        body = {
-            "data": None,
-            "message": "USER_ALREADY_REGISTERED"
-        }
-        response = {"statusCode": 200, "headers": headers, "body": json.dumps(body)}
-        return response
-
+        return response_no_data(status_code=406, message='User is already registered')
+        
     # Save the new user
     # we have to encrypt the password
     password = generate_password_hash(password)
@@ -59,12 +49,12 @@ def register(event, context):
 
     new_user.save()
 
-    response = {"statusCode": 200, "headers": headers, "body": json.dumps({
+    body = {
         "email": new_user.email,
         "password":new_user.password,
         "first_name":new_user.first_name,
         "last_name":new_user.last_name,
         "is_active":new_user.is_active,
         "is_password_change": new_user.is_password_change
-    })}
-    return response
+    }
+    return response_with_data(status_code=201, data=body)
