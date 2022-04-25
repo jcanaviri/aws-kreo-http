@@ -5,6 +5,7 @@ from uuid import uuid1
 from ..lib.headers import headers
 from ..models.company_model import CompanyModel
 from ..models.task_model import TaskModel
+from ..models.task_basic_model import TaskBasicModel
 
 
 def create(event, context):
@@ -40,13 +41,13 @@ def create(event, context):
     new_company.save()
 
     # When the company is created, create its basic tasks
-    for task in TaskModel.scan(TaskModel.task_type == 'basic'):
+    for basic_task in TaskBasicModel.scan():
         new_task = TaskModel(
             task_id=str(uuid1()),
-            title=task.title,
-            description=task.description,
-            status=task.status,
-            task_type=task.task_type,
+            title=basic_task.title,
+            description=basic_task.description,
+            status=False,
+            task_type='basic',
             company_id=new_company.company_id
         )
         new_task.save()

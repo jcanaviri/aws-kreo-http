@@ -13,17 +13,16 @@ def get_tasks_by_company_id(event, context):
 
     # Get the basic tasks
     task_list = []
-    for task in TaskModel.scan():
-        if task.company_id == company_id:
-            curr_task = {
-                "task_id": task.task_id,
-                "title": task.title,
-                "description": task.description,
-                "status": task.status,
-                "task_type": task.task_type,
-                "company_id": task.company_id
-            }
-            task_list.append(curr_task)
+    for task in TaskModel.scan(TaskModel.company_id == company_id):
+        curr_task = {
+            "task_id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "status": task.status,
+            "task_type": task.task_type,
+            "company_id": task.company_id
+        }
+        task_list.append(curr_task)
     body = {
         "data": task_list
     }

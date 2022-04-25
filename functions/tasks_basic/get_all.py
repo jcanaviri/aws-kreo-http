@@ -1,21 +1,18 @@
 import json
 
-from ..models.task_model import TaskModel
+from ..models.task_basic_model import TaskBasicModel
 
 from ..lib.headers import headers
 
 
-def get_all_basic_tasks(event, context):
+def get_all(event, context):
     tasks_list = []
 
-    for task in TaskModel.scan(TaskModel.task_type == 'basic'):
+    for task in TaskBasicModel.scan():
         curr_task = {
-            "task_id": task.task_id,
+            "task_basic_id": task.task_basic_id,
             "title": task.title,
             "description": task.description,
-            "status": task.status,
-            "task_type": task.task_type,
-            "company_id": task.company_id
         }
         tasks_list.append(curr_task)
 

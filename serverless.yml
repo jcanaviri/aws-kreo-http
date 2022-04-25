@@ -161,12 +161,6 @@ functions:
       - httpApi:
           path: /api/v1/tasks
           method: post
-  create_basic_task:
-    handler: functions.tasks.create_basic_task.create_basic_task
-    events:
-      - httpApi:
-          path: /api/v1/tasks-basic
-          method: post
   get_one_task:
     handler: functions.tasks.get_one.get_one
     events:
@@ -179,29 +173,48 @@ functions:
       - httpApi:
           path: /api/v1/tasks
           method: get
-  get_all_basic_tasks:
-    handler: functions.tasks.get_all_basic_tasks.get_all_basic_tasks
-    events:
-      - httpApi:
-          path: /api/v1/tasks-basic
-          method: get
   update_one_task:
     handler: functions.tasks.update.update
     events:
       - httpApi:
           path: /api/v1/tasks/{task_id}
           method: put
-  update_basic_task:
-    handler: functions.tasks.update_basic_task.update_basic_task
-    events:
-      - httpApi:
-          path: /api/v1/tasks-basic/{task_id}
-          method: put
   delete_task:
     handler: functions.tasks.delete.delete
     events:
       - httpApi:
           path: /api/v1/tasks/{task_id}
+          method: delete
+  # Basic Tasks CRUD
+  create_basic_task:
+    handler: functions.tasks_basic.create.create
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic
+          method: post
+  get_one_basic_task:
+    handler: functions.tasks_basic.get_one.get_one
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic/{task_basic_id}
+          method: get
+  get_all_basic_tasks:
+    handler: functions.tasks_basic.get_all.get_all
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic
+          method: get
+  update_basic_task:
+    handler: functions.tasks_basic.update.update
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic/{task_basic_id}
+          method: put
+  delete_basic_task:
+    handler: functions.tasks_basic.delete.delete
+    events:
+      - httpApi:
+          path: /api/v1/tasks-basic/{task_basic_id}
           method: delete
 
 resources:
@@ -267,6 +280,19 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: task_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    tasksBasicTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tasksBasicTable
+        AttributeDefinitions:
+          - AttributeName: task_basic_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: task_basic_id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
