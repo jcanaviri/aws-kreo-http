@@ -1,5 +1,3 @@
-import json
-
 from ..lib.response import response_with_data, response_no_data
 
 from ..models.company_model import CompanyModel
@@ -18,8 +16,8 @@ def get_one(event, context):
                 "company_id": company.company_id,
                 "name": company.name,
                 "nit": company.nit,
-                "image": company.image,
-            },
+                "image": company.image
+            }
         }
 
         return response_with_data(status_code=200, data=body)

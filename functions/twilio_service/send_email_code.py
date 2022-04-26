@@ -30,7 +30,7 @@ def send_email_code(event, context):
         email = event['email'] if 'email' in event else None
     
     if email is None or type(email) != str:
-        return response_no_data(status=400, message='The body fields are invalid')
+        return response_no_data(status_code=400, message='The body fields are invalid')
     
     for _ in UserModel.scan(UserModel.email == email):
         try:
@@ -56,7 +56,7 @@ def send_email_code(event, context):
                 }
             }
 
-            return response_with_data(status=200, data=body)
+            return response_with_data(status_code=200, data=body)
         except TwilioRestException:
             return response_no_data(status_code=500, message="Twilio cannot send the code")
     

@@ -1,5 +1,3 @@
-import json
-
 from ..lib.response import response_with_data, response_no_data
 
 from ..models.task_model import TaskModel

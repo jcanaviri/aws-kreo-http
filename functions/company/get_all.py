@@ -1,5 +1,3 @@
-import json
-
 from ..lib.response import response_with_data
 from ..models.company_model import CompanyModel
 

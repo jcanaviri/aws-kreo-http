@@ -105,6 +105,12 @@ functions:
       - httpApi:
           path: /api/v1/companies/{company_id}/tasks
           method: get
+  get_documents_by_company:
+    handler: functions.company.get_documents.get_documents_by_company_id
+    events:
+      - httpApi:
+          path: /api/v1/companies/{company_id}/documents
+          method: get
   get_all_companies:
     handler: functions.company.get_all.get_all
     events:
@@ -216,6 +222,37 @@ functions:
       - httpApi:
           path: /api/v1/tasks-basic/{task_basic_id}
           method: delete
+  # Documents CRUD
+  create_document:
+    handler: functions.documents.create.create
+    events:
+      - httpApi:
+          path: /api/v1/documents
+          method: post
+  get_one_document:
+    handler: functions.documents.get_one.get_one
+    events:
+      - httpApi:
+          path: /api/v1/documents/{document_id}
+          method: get
+  get_all_document:
+    handler: functions.documents.get_all.get_all
+    events:
+      - httpApi:
+          path: /api/v1/documents
+          method: get
+  update_document:
+    handler: functions.documents.update.update
+    events:
+      - httpApi:
+          path: /api/v1/documents/{document_id}
+          method: put
+  delete_document:
+    handler: functions.documents.delete.delete
+    events:
+      - httpApi:
+          path: /api/v1/documents/{document_id}
+          method: delete
 
 resources:
   Resources:
@@ -293,6 +330,19 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: task_basic_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    documentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: documentsTable
+        AttributeDefinitions:
+          - AttributeName: document_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: document_id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

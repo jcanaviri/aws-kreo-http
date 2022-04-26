@@ -1,6 +1,3 @@
-import json
-from re import S
-
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
 from ..lib.response import response_no_data, response_no_content
