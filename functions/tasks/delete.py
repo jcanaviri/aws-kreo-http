@@ -2,7 +2,7 @@ import json
 
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
-from ..lib.response import response_no_data, response_no_content
+from ..lib.response import response_no_data
 
 from ..models.task_model import TaskModel
 
@@ -23,4 +23,4 @@ def delete(event, context):
     except DeleteError:
         return response_no_data(status_code=500, message='Could not delete task')
 
-    return response_no_content(status_code=204)
+    return response_no_data(status_code=200, message='Delete completed successfully')
