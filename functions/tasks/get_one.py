@@ -27,5 +27,5 @@ def get_one(event, context):
     except DoesNotExist:
         return response_no_data(status_code=404, message='Task not found')
     except:
-        return response_no_data(status_code=500, message='Could not delete task')
+        return response_no_data(status_code=500, message='Could get the task')
         

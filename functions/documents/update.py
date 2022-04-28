@@ -12,16 +12,21 @@ def update(event, context):
     except:
         return response_no_data(status_code=400, message='Could not get document_id')
 
-    try:
-        body = json.loads(event['body'])
+    body = json.loads(event['body'])
 
+    try:
         title = body["title"]
-        description = body["description"]
-        company_id = body["company_id"]
     except KeyError:
         title = event['title'] if 'title' in event else None
+    try:
+        description = body["description"]
+    except KeyError:
         description = event['description'] if 'description' in event else None
+    try:
+        company_id = body["company_id"]
+    except KeyError:
         company_id = event['company_id'] if 'company_id' in event else None
+        
 
     for doc in DocumentModel.query(hash_key=document_id):
         if title:
@@ -29,12 +34,13 @@ def update(event, context):
         if description:
             doc.description = description
         
-        # Find the company
-        try:
-            found_company = CompanyModel.get(hash_key=company_id) 
-        except:
-            return response_no_data(status_code=404, message='Company not found.')
-        doc.company_id = found_company.company_id
+        if company_id:
+            # Find the company
+            try:
+                found_company = CompanyModel.get(hash_key=company_id) 
+            except:
+                return response_no_data(status_code=404, message='Company not found.')
+            doc.company_id = found_company.company_id
         doc.save()
 
         body = {

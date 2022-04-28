@@ -13,27 +13,29 @@ def update(event, context):
     except:
         return response_no_data(status_code=400, message='Could not get task_basic_id')
 
-    try:
-        body = json.loads(event['body'])
-        
+    body = json.loads(event['body'])
+
+    try:    
         title = body['title']
-        description = body['description']
     except KeyError:
         title = event['title'] if 'title' in event else None
+    
+    try:
+        description = body['description']
+    except KeyError:
         description = event['description'] if 'description' in event else None
-        
-    if title is None or description is None:
-        return response_no_data(status_code=400, message='The body fields are invalid')
 
     try:
         found_task = TaskBasicModel.get(hash_key=task_basic_id)
     except DoesNotExist:
         return response_no_data(status_code=404, message='Task Basic not found')
     except: 
-        return response_no_data(status_code=500, message='Could not find task')
+        return response_no_data(status_code=500, message='Could not find task basic')
 
-    found_task.title = title
-    found_task.description = description
+    if title:
+        found_task.title = title
+    if description:
+        found_task.description = description
     found_task.save()
 
     body = {
