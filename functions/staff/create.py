@@ -24,7 +24,7 @@ def create(event, context):
         boss = body['boss']
         job =body['job']
         image = body['image']
-        company = body['company']
+        company_id = body['company_id']
     except KeyError:
         first_name = event['first_name'] if 'fist_name' in event else None
         last_name = event['last_name'] if 'last_name' in event else None
@@ -37,11 +37,11 @@ def create(event, context):
         boss = event['boss'] if 'boss' in event else None
         job = event['job'] if 'job' in event else None
         image = event['image'] if 'image' in event else None
-        company = event['company'] if 'company' in event else None
+        company_id = event['company_id'] if 'company_id' in event else None
     
     if first_name is None or last_name is None or email is None or password is None or\
         address is None or phone is None or document_number is None or\
-        document_type is None or boss is None or job is None or image is None or company is None :
+        document_type is None or boss is None or job is None or image is None or company_id is None :
         return response_no_data(status_code=400, message='The fiels are not valid')
         
     # If the email is already registered
@@ -49,7 +49,7 @@ def create(event, context):
         return response_no_data(status_code=403, message='Email is already registered')
         
     # Cannot create a new staff if the company doen't exists
-    for find_company in CompanyModel.scan(CompanyModel.name == company.lower()):
+    for find_company in CompanyModel.scan(CompanyModel.company_id == company_id):
         # Create a new user instance
         new_user = UserModel(
             user_id=str(uuid1()),
